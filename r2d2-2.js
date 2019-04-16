@@ -6,35 +6,62 @@ var markers2 = [];
 function initialize() {
   var map = new google.maps.Map(document.getElementById('map_canvas'), {
     center: new google.maps.LatLng(-33.997112, 151.198241),
-    zoom: 12,
+    zoom: 18,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   });
 
-  // const createMap = ({ lat, lng }) => {
-  //   return new google.maps.Map(document.getElementById('map_canvas'), {
-  //     zoom: 18
-  //   });
-  // };
+  //Overrides the map center to your current position
+  navigator.geolocation.getCurrentPosition(function (position) {
+    var pos = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    };
+    map.setCenter(pos);
+  });
+  cav = {
+    url: './cav.png',
+    size: new google.maps.Size(76, 56),
+    origin: new google.maps.Point(0, 0),
+    anchor: new google.maps.Point(38, 31),
+    scaledSize: new google.maps.Size(76, 56),
+    class: "gay"
+  };
+  GeoMarker = new GeolocationMarker();
+  GeoMarker.setCircleOptions({
+    fillColor: '#808080'
+  });
+  GeoMarker.setMarkerOptions({
+    icon: cav,
+    title: 'I might be here',
+    visible: true,
+    map: map,
+    cursor: 'pointer',
+    label: " ",
+  });
+  document.addEventListener("animationstart", AnimationListener, {
+    once: true
+  });
+  document.addEventListener("animationiteration", AnimationListener);
 
-  // const initialPosition = { lat: 59.32, lng: 17.84 };
-  // const map = createMap(initialPosition);
+  function AnimationListener() {
+    console.log("Ticking");
+    var audio = new Audio('./radar.mp3');
+    audio.play();
+  }
+  google.maps.event.addListenerOnce(GeoMarker, 'position_changed', function () {
+    map.setCenter(this.getPosition());
+    map.fitBounds(this.getBounds());
+    console.log("changing lmao")
+  });
+
+  google.maps.event.addListener(GeoMarker, 'geolocation_error', function (e) {
+    alert('There was an error obtaining your position. Message: ' + e.message);
+  });
+  GeoMarker.setMap(map);
 
 
   var bounds = new google.maps.LatLngBounds();
   for (ss = 0; ss < location_school2.length; ss++) {
-    // var myIcon = new google.maps.MarkerImage("./r2d2.png", null, null, null, new google.maps.Size(56,56));
-    // var marker_school = new google.maps.Marker({
-    //   position: new google.maps.LatLng(location_school2[ss][1], location_school2[ss][2]),
-    //   map: map,
-    //   url: myIcon,
-    //   //animation: google.maps.Animation.BOUNCE,
-    //   visible: true,
-    //   flat: true,
-    //   size: new google.maps.Size(56, 56),
-    //   origin: new google.maps.Point(0, 0),
-    //   anchor: new google.maps.Point(-131, 31),
-    //   scaledSize: new google.maps.Size(56, 56)
-    // });
     var enemy = {
       size: new google.maps.Size(56, 56),
       origin: new google.maps.Point(0, 0),
@@ -55,19 +82,6 @@ function initialize() {
       strokeWeight: 0
     });
     circle.bindTo('center', marker_school, 'position');
-
-    // google.maps.event.addListener(
-    //   marker_school,
-    //   'click',
-    //   (function(marker_school, ss) {
-    //     return function() {
-    //       var eee = document.querySelector("#school_bg")
-    //       eee.show();
-
-    //       document.querySelector('#name_school').append(location_school2[ss][3]);
-    //     };
-    //   })(marker_school, ss)
-    // );
     markers2.push(marker_school);
     //bounds.extend(marker_school.getPosition());
   }
