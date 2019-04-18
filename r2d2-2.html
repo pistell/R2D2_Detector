@@ -19,9 +19,26 @@
         padding: 0px;
       }
 
+      @-webkit-keyframes pulsate {
+        20%,
+        100% {
+          -webkit-transform: scale(10.3);
+          transform: scale(10.3);
+          opacity: 0;
+        }
+        0% {
+          -webkit-transform: scale(0.25);
+          opacity: 1;
+        }
+        10% {
+          opacity: 1;
+        }
+      }
+
       @keyframes pulsate {
         20%,
         100% {
+          -webkit-transform: scale(10.3);
           transform: scale(10.3);
           opacity: 0;
         }
@@ -35,14 +52,16 @@
       }
 
       /* This disgusting selector targets the label of the Cav marker and emits a pulsating animation. */
-      #map_canvas > div > div > div:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(5) > div > div > div {
+      .cavIcon {
+        -webkit-animation: pulsate 8s ease-in-out infinite;
         animation: pulsate 8s ease-in-out infinite;
         border: 1pt solid #fff;
         border-radius: 51px;
+        -webkit-box-shadow: inset 0 0 5px #06f, inset 0 0 5px #06f, inset 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f;
         box-shadow: inset 0 0 5px #06f, inset 0 0 5px #06f, inset 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f;
         height: 51px !important;
-        /* margin:-18px 0 0 -18px; */
         width: 51px !important;
+        margin: -25px -28px;
       }
 
       /* Disable for production or delete completely */
@@ -51,7 +70,6 @@
         top: 0;
         left: 0;
         -webkit-transform: translate3d(0, 0, 0);
-        -moz-transform: translate3d(0, 0, 0);
         transform: translate3d(0, 0, 0);
         -webkit-backface-visibility: hidden;
         -webkit-perspective: 1000;

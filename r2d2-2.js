@@ -1,16 +1,22 @@
-//let geocoder;
-//let map;
+// let geocoder;
+var map;
+//var safetyZone;
 // var school;
+//var historicalOverlay;
 const markers = [];
+var enemyCircle;
+//var boundz;
+var arrMarkers = new Array(0);
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var audioSource;
 
 function initialize() {
   const map = new google.maps.Map(document.getElementById('map_canvas'), {
-    center: new google.maps.LatLng(-33.997112, 151.198241),
     zoom: 18,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
   });
 
-  // Overrides the map center to your current position
+  // Overrides the map center to your current live position
   navigator.geolocation.getCurrentPosition((position) => {
     const pos = {
       lat: position.coords.latitude,
@@ -19,20 +25,123 @@ function initialize() {
     map.setCenter(pos);
   });
 
-  const r2d2Array = [
-    ['Coogee Beach', -33.923036, 151.259052, 5],
-    ['Bondi Beach', -33.890542, 151.274856, 4],
-    ['Cronulla Beach', -34.028249, 151.157507, 3],
-    ['Manly Beach', -33.80010128657071, 151.28747820854187, 2],
-    ['Cambridge and Park', 43.150130, 282.412324, 1],
-  ];
 
+  function getData() {
+    audioSource = audioCtx.createBufferSource();
+    return fetch('./radar.mp3')
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+      }
+      return response.arrayBuffer();
+    })
+    .then(function(buffer) {
+      audioCtx.decodeAudioData(buffer, function(decodedData) {
+        audioSource.buffer = decodedData;
+        audioSource.connect(audioCtx.destination);
+      });
+    });
+  };
+
+
+  // Super cool radar blip SFX
+  function radarSoundEffect() {
+    console.log('Ticking');
+    getData()
+    .then(function() {
+      //errorDisplay.innerHTML = '';
+      audioSource.start(0);
+      //play.disabled = true;
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+  }
+
+  // 1000x1000 Grid overlay boundaries (excluding West side because I don't want to get murdered)
+  const overlayGridBounds = {
+    north: 43.172925,
+    south: 43.132099,
+    east: -77.545008,
+    west: -77.608495
+  };
+
+  historicalOverlay = new google.maps.GroundOverlay('./grid2.png', overlayGridBounds);
+  historicalOverlay.setOpacity(0.5);
+  historicalOverlay.setMap(map);
+
+  //This is The Old Toad (my finish area)
+  const safetyZone = new google.maps.Rectangle({
+    strokeColor: '#167007',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#5FA91D',
+    fillOpacity: 0.35,
+    map: map,
+    bounds: new google.maps.LatLngBounds(
+    new google.maps.LatLng(43.153737, -77.595888),
+    new google.maps.LatLng(43.153240, -77.595250))
+  });
+
+
+  //Plots an array of enemy icons in random locations within the bounding box of the grid
+  function plotRandomR2D2Markers(number){
+    const boundz = historicalOverlay.getBounds();
+    const southWest = boundz.getSouthWest();
+    const northEast = boundz.getNorthEast();
+    const lngSpan = northEast.lng() - southWest.lng();
+    const latSpan = northEast.lat() - southWest.lat();
+    pointsrand = [];
+    for (let i = 0; i < number; ++i) {
+      const point = new google.maps.LatLng(southWest.lat() + latSpan * Math.random(), southWest.lng() + lngSpan * Math.random());
+      pointsrand.push(point);
+    }
+
+    for (let i = 0; i < number; ++i){
+      const str_text = i + " : " + pointsrand[i];
+      const marker = placeMarker(pointsrand[i], str_text);
+      arrMarkers.push(marker);
+      marker.setMap(map);
+    }
+  }
+
+  function placeMarker(location){
+    const randomR2D2Marker = {
+      url: './r2d2.png',
+      size: new google.maps.Size(56, 56),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(31, 31),
+      scaledSize: new google.maps.Size(56, 56),
+    };
+    const marker = new google.maps.Marker({
+      position: location,
+      map: map,
+      icon: randomR2D2Marker,
+    });
+    const randomR2D2MarkerCircle = new google.maps.Circle({
+      map,
+      radius: 130,
+      fillColor: '#AA0000',
+      strokeColor: '#FFF',
+      strokeWeight: 0,
+    });
+    // Binds the circle 'detection' element to the center of the R2D2 marker
+    randomR2D2MarkerCircle.bindTo('center', marker, 'position');
+    return marker;
+  }
+
+  //Put 10 random enemy icons on the map
+  plotRandomR2D2Markers(10);
+
+
+  //Setup your Cavalry marker
   const cav = {
     url: './cav.png',
     size: new google.maps.Size(76, 56),
     origin: new google.maps.Point(0, 0),
     anchor: new google.maps.Point(38, 31),
     scaledSize: new google.maps.Size(76, 56),
+    title: '2nd Platoon Alpha Troop',
   };
 
   const GeoMarker = new GeolocationMarker();
@@ -48,40 +157,57 @@ function initialize() {
     map,
     cursor: 'pointer',
     label: ' ',
+    optimized: false
   });
 
-  function radarSoundEffect() {
-    console.log('Ticking');
-    const audio = new Audio('./radar.mp3');
-    audio.play();
-  }
-
-  // Play the radar SFX once when the page loads
-  // The 'animationiteration' event only begins playing on the 2nd iteration
-  document.addEventListener('animationstart', radarSoundEffect, {
-    once: true,
-  });
-  // Play the radar SFX on each animation iteration
-  document.addEventListener('animationiteration', radarSoundEffect);
-
-
-  // Changes map boundaries when your marker moves
-  google.maps.event.addListenerOnce(GeoMarker, 'position_changed', function() {
-    map.setCenter(this.getPosition());
-    map.fitBounds(this.getBounds());
-    console.log('Changing Map Boundaries');
-  });
-
-  // Error handling for your map marker
-  google.maps.event.addListener(GeoMarker, 'geolocation_error', (e) => {
-    console.error(`There was an error obtaining your position. Message: ${e.message}`);
-  });
-
-  // Places your Cavalry marker on the map
+  // // Places your Cavalry marker on the map
   GeoMarker.setMap(map);
+
+  /**
+   * Mutation Observer with ES6 Generator. This is for adding the CSS class to the Cavalry marker. Without it you would have a ridiculously long CSS selector that couldnt target by class or ID so it would break on any extra R2D2 marker inserted into the DOM. This is a bit buggy on FireFox. Use a JS transpiler to potentially fix the issue
+   */
+  const observer = new MutationObserver(function(mutations) {
+    if (document.body.contains(document.querySelector("img[src='./cav.png']"))) {
+      console.log("Cavalry marker found in DOM");
+      function * generatorFunction() {
+        const ci = document.querySelector("img[src='./cav.png']")
+        yield ci;
+        const ciparent = ci.parentElement;
+        yield ciparent;
+        const ciparentsibling = ciparent.nextElementSibling;
+        yield ciparentsibling;
+        const radarClass = ciparentsibling.classList.add("cavIcon");
+        yield radarClass;
+      }
+      const generatorObject = generatorFunction();
+      generatorObject.next().value;
+      generatorObject.next().value;
+      generatorObject.next().value;
+      generatorObject.next().value;
+      observer.disconnect();
+    } else {
+      console.log("Cavalry marker not yet loaded in DOM")
+    }
+  });
+
+  observer.observe(document, {
+    attributes: false,
+    childList: true,
+    characterData: false,
+    subtree: true
+  });
 
   // Enable this to set your map bounds to include all the R2D2 markers
   // var bounds = new google.maps.LatLngBounds();
+
+  // R2D2 pre-plots (remove on production)
+  const r2d2Array = [
+    ['Park Ave Blocking', 43.149039, -77.581179, 5],
+    ['Richmond St', 43.158069, -77.595182, 4],
+    ['Merriman St', 43.156608, -77.582173, 3],
+    ['East Ave and Goodman', 43.152952, -77.587058, 2],
+    ['Cambridge and Park', 43.150130, 282.412324, 1],
+  ];
 
   for (i = 0; i < r2d2Array.length; i++) {
     const enemy = {
@@ -108,6 +234,28 @@ function initialize() {
     // bounds.extend(r2d2_marker.getPosition());
   }
   // map.fitBounds(bounds);
+
+
+  // Play the radar SFX once when the page loads
+  // The 'animationiteration' event only begins playing on the 2nd iteration
+  document.addEventListener('animationstart', radarSoundEffect, {
+    once: true //adding 'once' will remove the event listener after it fires
+  });
+  // Play the radar SFX on each animation iteration
+  document.addEventListener('animationiteration', radarSoundEffect);
+
+  // Changes map boundaries when your marker moves and when page loads
+  google.maps.event.addListenerOnce(GeoMarker, 'position_changed', function() {
+    map.setCenter(this.getPosition());
+    map.fitBounds(this.getBounds());
+    console.log('Changing Map Boundaries');
+  });
+
+  // Error handling for your map marker
+  google.maps.event.addListener(GeoMarker, 'geolocation_error', (e) => {
+    console.error(`There was an error obtaining your position. Message: ${e.message}`);
+  });
+
 }
 
 // add initialize to the API callback and async/defer it for production

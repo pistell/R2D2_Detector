@@ -163,6 +163,11 @@
         const move = document.querySelector('.move');
         google.maps.event.addListener(marker, 'position_changed', update);
         function update() {
+          function caughtSFX() {
+            console.log('Ticking');
+            const audio = new Audio('./caught.mp3');
+            audio.play();
+          }
           var position = marker.getPosition();
           //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
           function arePointsNear(checkPoint, centerPoint, km) {
@@ -179,6 +184,7 @@
               fillColor: '#FF0000',
               strokeColor: '#FF0000'
             });
+            caughtSFX();
           } else {
             cir_r2d2.setOptions({
               fillColor: '#F5F5F5',
