@@ -1,28 +1,27 @@
-// let geocoder;
- var map;
-// //var safetyZone;
-// // var school;
-// //var historicalOverlay;
+var map;
 const markers = [];
-// var enemyCircle;
-// var bounds;
 const arrMarkers = new Array(0);
 const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-// var audioSource;
-// var myvar;
 var GeoMarker;
 var randomR2D2MarkerCircle;
 var enemyCircle;
 
 function initialize() {
-
-
+  /**********************************************************************
+   * BEGIN: PubNub API for constant Geolocation
+   * This is 'wonky' at best but its the only alternative I have without having a GPS module
+   *********************************************************************/
   window.lat = 37.7850;
   window.lng = -122.4383;
 
   function getLocation() {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(updatePosition, onError, {frequency:5000, maximumAge: 0, timeout: 100, enableHighAccuracy:true} );
+      navigator.geolocation.getCurrentPosition(updatePosition, onError, {
+        frequency: 5000,
+        maximumAge: 0,
+        timeout: 100,
+        enableHighAccuracy: true
+      });
     }
     return null;
   };
@@ -39,7 +38,7 @@ function initialize() {
     test();
   }, 5000);
 
-  function onError(e){
+  function onError(e) {
     console.error(e);
   }
 
@@ -83,14 +82,6 @@ function initialize() {
     });
     console.log(`PubNub Coords: ${window.lat} ${window.lng}`)
   }, 5000);
-
-
-
-
-
-
-
-
 
 
   /********************************************************************
@@ -254,10 +245,6 @@ function initialize() {
   });
 
 
-  // Enable this to set your map bounds to include all the R2D2 markers
-  //var bounds = new google.maps.LatLngBounds();
-
-
 
   /********************************************************************
    * BEGIN: Random array of R2D2 Markers
@@ -284,14 +271,14 @@ function initialize() {
     }
   }
 
- function placeMarker(location) {
+  function placeMarker(location) {
     const randomR2D2Marker = {
       url: './r2d2.png',
       size: new google.maps.Size(56, 56),
       origin: new google.maps.Point(0, 0),
       anchor: new google.maps.Point(31, 31),
       scaledSize: new google.maps.Size(56, 56),
-      circle:    randomR2D2MarkerCircle = new google.maps.Circle({
+      circle: randomR2D2MarkerCircle = new google.maps.Circle({
         map,
         radius: 130,
         fillColor: '#AA0000',
@@ -315,87 +302,51 @@ function initialize() {
 
 
 
-// setTimeout(() => {
-
-//   console.dir(arrMarkers)
-// }, 4000);
-function test(){
-  function caughtSFX() {
-    console.log('PLAYING CAUGHT SOUND FILE');
-    const audio = new Audio('./caught.mp3');
-    audio.play();
-  }
-  var position = GeoMarker.getPosition();
-  //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
-  function arePointsNear(checkPoint, centerPoint, km){
-    var ky = 40000 / 360;
-    var kx = arrMarkers.forEach(e => {
-     kx = Math.cos((Math.PI * e.position.lat()) / 180.0) * ky;
-    })
-    var dx = arrMarkers.forEach(e => {
-      dx = Math.abs(e.position.lng() - GeoMarker.position.lng()) * kx;
-    })
-    var dy = arrMarkers.forEach(e => {
-      dy = Math.abs(e.position.lat() - GeoMarker.position.lat()) * ky;
-    })
-    return Math.sqrt(dx * dx + dy * dy) <= km;
-  }
-  //Detect if the cav GeoMarker is within the 130m radius of the r2d2!
-  var n = arePointsNear(GeoMarker, arrMarkers, 0.13);
-  if (n) {
-    arrMarkers.forEach(e => {
-      e.icon.circle.setOptions({
-        fillColor: '#FF0000',
-        strokeColor: '#FF0000'
+  /**********************************************************************
+   * BEGIN: R2D2 detection radius
+   *********************************************************************/
+  function test() {
+    function caughtSFX() {
+      console.log('PLAYING CAUGHT SOUND FILE');
+      const audio = new Audio('./caught.mp3');
+      audio.play();
+    }
+    var position = GeoMarker.getPosition();
+    //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
+    function arePointsNear(checkPoint, centerPoint, km) {
+      var ky = 40000 / 360;
+      var kx = arrMarkers.forEach(e => {
+        kx = Math.cos((Math.PI * e.position.lat()) / 180.0) * ky;
       })
-    })
-    //var audio2 = new Audio('./caught.mp3').play();
-    caughtSFX();
-  } else {
-    arrMarkers.forEach(e => {
-      e.icon.circle.setOptions({
-        fillColor: '#F5F5F5',
-        strokeColor: '#528BE2'
+      var dx = arrMarkers.forEach(e => {
+        dx = Math.abs(e.position.lng() - GeoMarker.position.lng()) * kx;
       })
-    })
+      var dy = arrMarkers.forEach(e => {
+        dy = Math.abs(e.position.lat() - GeoMarker.position.lat()) * ky;
+      })
+      return Math.sqrt(dx * dx + dy * dy) <= km;
+    }
+    //Detect if the cav GeoMarker is within the 130m radius of the r2d2!
+    var n = arePointsNear(GeoMarker, arrMarkers, 0.13);
+    if (n) {
+      arrMarkers.forEach(e => {
+        e.icon.circle.setOptions({
+          fillColor: '#FF0000',
+          strokeColor: '#FF0000'
+        })
+      })
+      //var audio2 = new Audio('./caught.mp3').play();
+      caughtSFX();
+    } else {
+      arrMarkers.forEach(e => {
+        e.icon.circle.setOptions({
+          fillColor: '#F5F5F5',
+          strokeColor: '#528BE2'
+        })
+      })
+    }
+    console.log("Marker is inside R2D2 detection radius: ", n);
   }
-  console.log("Marker is inside R2D2 detection radius: " , n);
-}
-
-
-
-  // function caughtSFX() {
-  //   console.log('PLAYING CAUGHT SOUND FILE');
-  //   const audio = new Audio('./caught.mp3');
-  //   audio.play();
-  // }
-  // var position = GeoMarker.getPosition();
-  // //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
-  // function arePointsNear(checkPoint, centerPoint, km) {
-  //   var ky = 40000 / 360;
-  //   var kx = Math.cos((Math.PI * randomR2D2MarkerCircle.position.lat) / 180.0) * ky;
-  //   var dx = Math.abs(randomR2D2MarkerCircle.position.lng - GeoMarker.position.lng()) * kx;
-  //   var dy = Math.abs(randomR2D2MarkerCircle.position.lat - GeoMarker.position.lat()) * ky;
-  //   return Math.sqrt(dx * dx + dy * dy) <= km;
-  // }
-  // //Detect if the cav GeoMarker is within the 130m radius of the r2d2!
-  // var n = arePointsNear(GeoMarker, randomR2D2MarkerCircle, 0.13);
-  // if (n) {
-  //   randomR2D2MarkerCircle.setOptions({
-  //     fillColor: '#FF0000',
-  //     strokeColor: '#FF0000'
-  //   });
-  //   //var audio2 = new Audio('./caught.mp3').play();
-  //   caughtSFX();
-  // } else {
-  //   randomR2D2MarkerCircle.setOptions({
-  //     fillColor: '#F5F5F5',
-  //     strokeColor: '#528BE2'
-  //   });
-  // }
-  // console.log(n);
-  // move.textContent = `${n}`;
-
 
 
 
@@ -459,27 +410,6 @@ function test(){
     console.log('Changing Map Boundaries');
 
   });
-
-
-
-
-  // setTimeout(() => {
-
-  //   for (const i of randomR2D2MarkerCircle) {
-  //     console.log(i);
-  //   }
-  //   for (const key in randomR2D2MarkerCircle) {
-  //     if (randomR2D2MarkerCircle.hasOwnProperty(key)) {
-  //       const element = randomR2D2MarkerCircle[key];
-  //       element.setOptions({
-  //         fillColor: '#F5F5F5'
-  //       })
-  //     }
-  //   }
-
-
-  // }, 4000);
-
 
   // Error handling for your map marker
   google.maps.event.addListener(GeoMarker, 'geolocation_error', (e) => {
