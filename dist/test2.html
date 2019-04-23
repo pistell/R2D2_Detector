@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Geolocation watchPosition</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdmjENIKrrlhwYOlm4kvNGdSZOi-Ars7o&library=spherical" type="text/javascript"></script>
+    <script src="/geolocation-marker.20039c5f.js"></script>
+    <script src="/geothrot.65d4ef96.js"></script>
+    <script>function initMap() {
+  var map = new google.maps.Map(document.getElementById('map_canvas'), {
+    center: {
+      lat: -10.6607781,
+      lng: -76.2523706
+    },
+    zoom: 15
+  });
+  var infoWindow = new google.maps.InfoWindow({
+    map: map
+  });
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      var pos = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      infoWindow.setPosition(pos);
+      infoWindow.setContent('Aqui estas tú');
+      map.setCenter(pos);
+    }, function () {
+      handleLocationError(true, infoWindow, map.getCenter());
+    });
+  } else {
+    handleLocationError(false, infoWindow, map.getCenter());
+  }
+
+  function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+    infoWindow.setPosition(pos);
+    infoWindow.setContent(browserHasGeolocation ? 'Error: La Geolocalizacion no esta disponible.' : 'Error: Tu navegador no soporta la Geolocalizacion.');
+  } //Normal
+  // var origin = {lat: -10.6607781, lng: -76.2523706};
+  // var map = new google.maps.Map(document.getElementById('map-normal'), {
+  //   zoom: 5,
+  //   center: origin
+  // });
+
+
+  google.maps.event.trigger(map, 'resize');
+}
+
+google.maps.event.addDomListener(window, 'load', initMap);</script>
+    <style>html,
+      body,
+      html,
+      body,
+      #map_canvas {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+        padding: 0px;
+      }</style>
+  </head>
+  <body>
+    <h3>Geolocation watchPosition Test</h3>
+    <div id="map_canvas"></div>
+  </body>
+</html>

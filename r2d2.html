@@ -51,171 +51,210 @@
       <div id="map" class="map"></div>
       <p id="info" class="info"></p>
       <p class="move"></p>
+
+      <br />
     </main>
     <script>
-      /**
-       * Create google maps Map instance.
-       * @param {number} lat
-       * @param {number} lng
-       * @return {Object}
-       */
-      const createMap = ({ lat, lng }) => {
-        return new google.maps.Map(document.getElementById('map'), {
-          zoom: 18
-        });
-      };
-
-      /**
-       * Create google maps Marker instance.
-       * @param {Object} map
-       * @param {Object} position
-       * @return {Object}
-       */
-
-      /**
-       * Track the user location.
-       * @param {Object} onSuccess
-       * @param {Object} [onError]
-       * @return {number}
-       */
-      const trackLocation = ({ onSuccess, onError = () => {} }) => {
-        if ('geolocation' in navigator === false) {
-          return onError(new Error('Geolocation is not supported by your browser.'));
+      window.addEventListener('load', function() {
+        console.log('window Loaded');
+        function initAudio() {
+          var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          var source = audioCtx.createBufferSource();
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', './caught.mp3');
+          xhr.responseType = 'arraybuffer';
+          xhr.addEventListener('load', function(r) {
+            audioCtx.decodeAudioData(xhr.response, function(buffer) {
+              source.buffer = buffer;
+              source.connect(audioCtx.destination);
+              source.loop = false;
+            });
+            source.start(0);
+          });
+          xhr.send();
         }
 
-        return navigator.geolocation.watchPosition(onSuccess, onError, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      };
+        //   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        //   var source = audioCtx.createBufferSource();
+        //   var xhr = new XMLHttpRequest();
+        //   xhr.open('GET', './caught.mp3');
+        //   xhr.responseType = 'arraybuffer';
+        //   xhr.addEventListener('load', function(r) {
+        //     audioCtx.decodeAudioData(xhr.response, function(buffer) {
+        //       source.buffer = buffer;
+        //       source.connect(audioCtx.destination);
+        //       source.loop = false;
+        //     });
+        //     source.start(0);
+        //   });
+        //   xhr.send();
 
-      /**
-       * Get position error message from the given error code.
-       * @param {number} code
-       * @return {String}
-       */
-      const getPositionErrorMessage = code => {
-        switch (code) {
-          case 1:
-            return 'Permission denied.';
-          case 2:
-            return 'Position unavailable.';
-          case 3:
-            return 'Timeout reached.';
-        }
-      };
-
-      /**
-       * Initialize the application.
-       * Automatically called by the google maps API once it's loaded.
-       */
-      function init() {
-        var cav = {
-          url: './cav.png',
-          scaledSize: new google.maps.Size(64, 42)
-        };
-        const createMarker = ({ map, position }) => {
-          return new google.maps.Marker({
-            map: map,
-            position: position,
-            icon: cav
+        /**
+         * Create google maps Map instance.
+         * @param {number} lat
+         * @param {number} lng
+         * @return {Object}
+         */
+        const createMap = ({ lat, lng }) => {
+          return new google.maps.Map(document.getElementById('map'), {
+            zoom: 18
           });
         };
 
-        var r2d2 = {
-          url: './r2d2.png',
-          size: new google.maps.Size(56, 56),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(31, 31),
-          scaledSize: new google.maps.Size(56, 56)
-        };
-        const createMarker_R2D2 = ({ map, position }) => {
-          return new google.maps.Marker({
-            map: map,
-            position: { lat: 43.149878, lng: -77.586285 },
-            icon: r2d2
-          });
-        };
+        /**
+         * Create google maps Marker instance.
+         * @param {Object} map
+         * @param {Object} position
+         * @return {Object}
+         */
 
-        const cityCircle = ({ map, position }) => {
-          return new google.maps.Circle({
-            map: map,
-            position: { lat: 43.149878, lng: -77.586285 },
-            strokeColor: '#FF0000',
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: '#FF0000',
-            fillOpacity: 0.15,
-            map: map,
-            center: { lat: 43.149878, lng: -77.586285 },
-            radius: 130
-          });
-        };
-
-        const initialPosition = { lat: 59.32, lng: 17.84 };
-        const map = createMap(initialPosition);
-        const marker = createMarker({ map, position: createMarker.position });
-        const marker_r2d2 = createMarker_R2D2({ map, position: createMarker_R2D2.position });
-        const cir_r2d2 = cityCircle({ map, position: cityCircle.center });
-        const $info = document.getElementById('info');
-
-        const move = document.querySelector('.move');
-        google.maps.event.addListener(marker, 'position_changed', update);
-        function update() {
-          function caughtSFX() {
-            console.log('Ticking');
-            const audio = new Audio('./caught.mp3');
-            audio.play();
+        /**
+         * Track the user location.
+         * @param {Object} onSuccess
+         * @param {Object} [onError]
+         * @return {number}
+         */
+        const trackLocation = ({ onSuccess, onError = () => {} }) => {
+          if ('geolocation' in navigator === false) {
+            return onError(new Error('Geolocation is not supported by your browser.'));
           }
-          var position = marker.getPosition();
-          //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
-          function arePointsNear(checkPoint, centerPoint, km) {
-            var ky = 40000 / 360;
-            var kx = Math.cos((Math.PI * cir_r2d2.position.lat) / 180.0) * ky;
-            var dx = Math.abs(cir_r2d2.position.lng - marker.position.lng()) * kx;
-            var dy = Math.abs(cir_r2d2.position.lat - marker.position.lat()) * ky;
-            return Math.sqrt(dx * dx + dy * dy) <= km;
+
+          return navigator.geolocation.watchPosition(onSuccess, onError, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          });
+        };
+
+        /**
+         * Get position error message from the given error code.
+         * @param {number} code
+         * @return {String}
+         */
+        const getPositionErrorMessage = code => {
+          switch (code) {
+            case 1:
+              return 'Permission denied.';
+            case 2:
+              return 'Position unavailable.';
+            case 3:
+              return 'Timeout reached.';
           }
-          //Detect if the cav marker is within the 130m radius of the r2d2!
-          var n = arePointsNear(marker, cir_r2d2, 0.13);
-          if (n) {
-            cir_r2d2.setOptions({
+        };
+
+        /**
+         * Initialize the application.
+         * Automatically called by the google maps API once it's loaded.
+         */
+        function init() {
+          var cav = {
+            url: './cav.png',
+            scaledSize: new google.maps.Size(64, 42)
+          };
+          const createMarker = ({ map, position }) => {
+            return new google.maps.Marker({
+              map: map,
+              position: position,
+              icon: cav
+            });
+          };
+
+          var r2d2 = {
+            url: './r2d2.png',
+            size: new google.maps.Size(56, 56),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(31, 31),
+            scaledSize: new google.maps.Size(56, 56)
+          };
+          const createMarker_R2D2 = ({ map, position }) => {
+            return new google.maps.Marker({
+              map: map,
+              position: { lat: 43.149878, lng: -77.586285 },
+              icon: r2d2
+            });
+          };
+
+          const cityCircle = ({ map, position }) => {
+            return new google.maps.Circle({
+              map: map,
+              position: { lat: 43.149878, lng: -77.586285 },
+              strokeColor: 'rgba(0,0,0,0.0)',
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
               fillColor: '#FF0000',
-              strokeColor: '#FF0000'
+              fillOpacity: 0.15,
+              map: map,
+              center: { lat: 43.149878, lng: -77.586285 },
+              radius: 130
             });
-            caughtSFX();
-          } else {
-            cir_r2d2.setOptions({
-              fillColor: '#F5F5F5',
-              strokeColor: '#528BE2'
-            });
+          };
+
+          const initialPosition = { lat: 59.32, lng: 17.84 };
+          const map = createMap(initialPosition);
+          const marker = createMarker({ map, position: createMarker.position });
+          const marker_r2d2 = createMarker_R2D2({ map, position: createMarker_R2D2.position });
+          const cir_r2d2 = cityCircle({ map, position: cityCircle.center });
+          const $info = document.getElementById('info');
+
+          const move = document.querySelector('.move');
+          google.maps.event.addListener(marker, 'position_changed', update);
+          function update() {
+            function caughtSFX() {
+              console.log('PLAYING CAUGHT SOUND FILE');
+              const audio = new Audio('./caught.mp3');
+              audio.play();
+            }
+            var position = marker.getPosition();
+            //Calculate a conversion from degrees to kilometers at the latitude of the center point, then the Pythagorean theorem can be used to get the distance
+            function arePointsNear(checkPoint, centerPoint, km) {
+              var ky = 40000 / 360;
+              var kx = Math.cos((Math.PI * cir_r2d2.position.lat) / 180.0) * ky;
+              var dx = Math.abs(cir_r2d2.position.lng - marker.position.lng()) * kx;
+              var dy = Math.abs(cir_r2d2.position.lat - marker.position.lat()) * ky;
+              return Math.sqrt(dx * dx + dy * dy) <= km;
+            }
+            //Detect if the cav marker is within the 130m radius of the r2d2!
+            var n = arePointsNear(marker, cir_r2d2, 0.13);
+            if (n) {
+              cir_r2d2.setOptions({
+                fillColor: '#FF0000',
+                strokeColor: '#FF0000'
+              });
+              var audio2 = new Audio('./caught.mp3').play();
+              move.innerHTML = `<h1>YOU HAVE BEEN DETECTED!!</h1>`;
+              //initAudio();
+            } else {
+              cir_r2d2.setOptions({
+                fillColor: '#F5F5F5'
+                // strokeColor: '#528BE2'
+              });
+            }
+            console.log('Caught: ', n);
           }
-          console.log(n);
-          move.textContent = `${n}`;
+
+          let watchId = trackLocation({
+            onSuccess: ({ coords: { latitude: lat, longitude: lng } }) => {
+              marker.setPosition({ lat, lng });
+
+              map.panTo({ lat, lng });
+              $info.textContent = `Lat: ${lat.toFixed(5)} Lng: ${lng.toFixed(5)}`;
+              $info.classList.remove('error');
+            },
+            onError: err => {
+              console.log($info);
+              $info.textContent = `Error: ${err.message || getPositionErrorMessage(err.code)}`;
+              $info.classList.add('error');
+            }
+          });
         }
-
-        let watchId = trackLocation({
-          onSuccess: ({ coords: { latitude: lat, longitude: lng } }) => {
-            marker.setPosition({ lat, lng });
-
-            map.panTo({ lat, lng });
-            $info.textContent = `Lat: ${lat.toFixed(5)} Lng: ${lng.toFixed(5)}`;
-            $info.classList.remove('error');
-          },
-          onError: err => {
-            console.log($info);
-            $info.textContent = `Error: ${err.message || getPositionErrorMessage(err.code)}`;
-            $info.classList.add('error');
-          }
-        });
-      }
+        init();
+      });
     </script>
     <!--Load the API from the specified URL
     * The async attribute allows the browser to render the page while the API loads
     * The key parameter will contain your own API key (which is not needed for this tutorial)
     * The callback parameter executes the initMap() function
     -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdmjENIKrrlhwYOlm4kvNGdSZOi-Ars7o&library=spherical&callback=init" type="text/javascript"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdmjENIKrrlhwYOlm4kvNGdSZOi-Ars7o&library=spherical" type="text/javascript"></script>
   </body>
 </html>

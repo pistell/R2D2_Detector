@@ -1,0 +1,20 @@
+/* This is the map style file */
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+      height: 97%;
+      padding: 0;
+    }
+  
+    #map {
+      height: 100%;
+      margin-top: 2.5rem;
+    }
+    /* Estilos mapa fin */
+      /*Estilos Mapa inicio */
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+
+
+/*# sourceMappingURL=style.css.map */
+/* >>>>>>> parent of 55c2caf... Haciendo responsive */

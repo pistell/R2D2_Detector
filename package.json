@@ -10,8 +10,8 @@
     "start": "run-script-os",
     "start:win32": "browser-sync start --server --files '**/*.css, **/*.html, **/*.js, !node_modules/**/*' --directory --port 7777 --browser \"C:\\Program Files\\Firefox Developer Edition\\firefox.exe\"",
     "//": "Hello! If you are having trouble running this command. Try changing Firefox Developer Edition to FirefoxDeveloperEdition",
-    "start:darwin:linux": "browser-sync start --server --files '**/*.css, **/*.html, **/*.js, !node_modules/**/*' --directory --port 7777 --browser 'Firefox Developer Edition'",
-    "ngrok": "./ngrok http 127.0.0.1:5500 -host-header='127.0.0.1:5500'"
+    "start:darwin:linux": "browser-sync start --server --files '**/*.css, **/*.html, **/*.js, !node_modules/**/*' --directory --port 7777 --browser 'Firefox Developer Edition' --https true",
+    "ngrok": "./ngrok http 127.0.0.1:5500 -host-header='127.0.0.1:5500' -hostname=r2d2app.ngrok.io"
   },
   "keywords": [],
   "author": "",
@@ -22,11 +22,16 @@
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.2",
     "ngrok": "^3.1.1",
+    "parcel": "^1.12.3",
     "resize-observer-polyfill": "^1.5.1",
     "run-script-os": "^1.0.5"
   },
   "dependencies": {
+    "@derhuerst/location": "^1.0.0",
     "geolocation-marker": "^2.0.5",
-    "modern-normalize": "^0.5.0"
+    "isomorphic-location": "^0.2.1",
+    "location-cli": "^1.1.0",
+    "modern-normalize": "^0.5.0",
+    "wifi-triangulate": "^1.1.2"
   }
 }

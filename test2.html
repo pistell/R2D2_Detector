@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Geolocation watchPosition</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdmjENIKrrlhwYOlm4kvNGdSZOi-Ars7o&library=spherical" type="text/javascript"></script>
+    <script src="./node_modules/geolocation-marker/geolocation-marker.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+      var map;
+      var mlat = 30.2287651;
+      var mlng = 75.107143;
+      var mzoom = 2;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map_canvas'), {
+          center: { lat: mlat, lng: mlng },
+          zoom: mzoom
+        });
+      }
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition, hidePosition);
+        } else {
+          alert('Geolocation is not supported by this browser. Now we trying to get your location through your IP address.');
+          ipPosition();
+        }
+      }
+      function showPosition(position) {
+        pos = {
+          lat: parseFloat(position.coords.latitude),
+          lng: parseFloat(position.coords.longitude)
+        };
+      }
+      function hidePosition(position) {
+        alert('User denied the access of the position. Now we trying to get your location through your IP address.');
+        ipPosition();
+      }
+      function ipPosition() {
+        $.get(
+          'http://ipinfo.io',
+          function(response) {
+            var loc = response.loc.split(',');
+            pos = {
+              lat: parseFloat(loc[0]),
+              lng: parseFloat(loc[1])
+            };
+          },
+          'jsonp'
+        );
+      }
+      getLocation();
+
+      var markers = [];
+      var getMarkerUniqueId = function(lat, lng) {
+        return lat + '_' + lng;
+      };
+      function addMarker(location) {
+        // Adds a marker to the map and push to the array.
+        mzoom = 12;
+        mlat = location.lat;
+        mlng = location.lng;
+        initMap();
+        var markerId = getMarkerUniqueId(location.lat, location.lng); // that will be used to cache this marker in markers object.
+        var marker = new google.maps.Marker({
+          position: location,
+          map: map,
+          animation: google.maps.Animation.DROP,
+          id: markerId
+        });
+        markers[markerId] = marker;
+      }
+      var removeMarker = function(marker, markerId) {
+        marker.setMap(null); // set markers setMap to null to remove it from map
+        delete markers[markerId]; // delete marker instance from markers object
+      };
+    </script>
+    <style>
+      html,
+      body,
+      html,
+      body,
+      #map_canvas {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Geolocation watchPosition Test</h3>
+    <div id="map_canvas"></div>
+  </body>
+</html>
